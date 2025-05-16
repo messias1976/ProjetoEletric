@@ -1,111 +1,52 @@
-import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs"
-import { LearnMore } from "./components/learn-more"
-import screenshotDevices from "./images/user-button@2xrl.webp"
-import signIn from "./images/sign-in@2xrl.webp"
-import verify from "./images/verify@2xrl.webp"
-import userButton2 from "./images/user-button-2@2xrl.webp"
-import signUp from "./images/sign-up@2xrl.webp"
-import logo from "./images/logo.png"
-import "./home.css"
-import Image from "next/image"
-import Link from "next/link"
-import { Footer } from "./components/footer"
+// calcelectric/app/page.tsx
 
-import { CARDS } from "./consts/cards"
-import { ClerkLogo } from "./components/clerk-logo"
-import { NextLogo } from "./components/next-logo"
+import Link from 'next/link';
+//import { Button } from '@/components/ui/button'; // Assumindo que tens um componente Button (opcional, podes usar um <a> normal)
 
-export default function Home() {
+// Se não tens um componente Button, substitui a importação acima por:
+// import Link from 'next/link';
+// E nos botões, usa a tag <a> com classes Tailwind
+
+
+export default function HomePage() {
   return (
-    <>
-      <main className="bg-[#FAFAFA] relative">
-        <div className="w-full bg-white max-w-[75rem] mx-auto flex flex-col border-l border-r border-[#F2F2F2] row-span-3">
-          <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-px bg-[#F2F2F2]" />
-          <Image
-            alt="Device"
-            className="size-64 bg-transparent absolute left-1/2 -translate-x-[23.75rem] -top-6 h-[51.375rem] object-contain w-[39.0625rem]"
-            src={logo}
-            unoptimized
-          />
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] py-12 px-4 text-center bg-gray-50"> {/* Ajustado min-height para considerar um possível header, padding, fundo suave */}
+      
+      <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+        Bem-vindo à Calculadora de Dimensionamento Elétrico
+      </h1>
+      
+      <p className="text-xl text-gray-600 mb-8 max-w-2xl">
+        Dimensione instalações elétricas residenciais de forma rápida e fácil, seguindo as normas NBR.
+      </p>
+      
+      <div className="flex space-x-4"> {/* Container para alinhar botões */}
+        
+        {/* Botão/Link para a página de Login */}
+        <Link href="/sign-in" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200">
+        Entrar {/* O texto agora vai direto dentro do Link */}
+    </Link>
 
-          <div className="px-12 py-16 border-b border-[#F2F2F4]">
-            <div className="bg-[#F4F4F5] px-4 py-3 rounded-full inline-flex gap-4">
-              <ClerkLogo />
-              <div aria-hidden className="w-px h-6 bg-[#C7C7C8]" />
-              <NextLogo />
-            </div>
-          </div>
+        {/* Botão/Link para a página de Registo */}
+        <Link href="/sign-up" className="bg-transparent border border-blue-600 text-blue-600 hover:bg-blue-50 font-semibold py-3 px-6 rounded-lg transition duration-200">
+       Criar Conta {/* O texto agora vai direto dentro do Link */}
+    </Link>
 
-          <div className="p-10 border-b border-[#F2F2F2]">
-            <h1 className="text-5xl font-bold tracking-tight text-[#131316] relative">
-              Auth starts here
-            </h1>
+      </div>
+      
+      {/* Opcional: Adicionar um link para a calculadora de dimensionamento, que será pública por agora */}
+      {/* No futuro, podes proteger esta rota */}
+       <div className="mt-12">
+       <Link href="/dimensionamento" className="text-blue-600 hover:underline text-lg">
+       Ir para a Calculadora (Acesso Gratuito) {/* O texto agora vai direto dentro do Link */}
+   </Link>
+       </div>
 
-            <p className="text-[#5E5F6E] pt-3 pb-6 max-w-[30rem] text-[1.0625rem] relative">
-              A simple and powerful Next.js template featuring authentication
-              and user management powered by Clerk.
-            </p>
-            <div className="relative flex gap-3">
-              <SignedIn>
-                <Link
-                  href="/dashboard"
-                  className="px-4 py-2 rounded-full bg-[#131316] text-white text-sm font-semibold"
-                >
-                  Dashboard
-                </Link>
-              </SignedIn>
-              <SignedOut>
-                <SignInButton>
-                  <button className="px-4 py-2 rounded-full bg-[#131316] text-white text-sm font-semibold">
-                    Sign in
-                  </button>
-                </SignInButton>
-              </SignedOut>
-            </div>
-          </div>
-          <div className="flex gap-8 w-full h-[41.25rem] scale-[1.03]">
-            <div className="space-y-8 translate-y-12">
-              <Image
-                alt="Device"
-                src={signUp}
-                unoptimized
-                className="flex-none rounded-xl bg-white shadow-[0_5px_15px_rgba(0,0,0,0.08),0_15px_35px_-5px_rgba(25,28,33,0.2)] ring-1 ring-gray-950/5"
-              />
-            </div>
-            <div className="space-y-8 -translate-y-4">
-              <Image
-                alt="Device"
-                src={verify}
-                unoptimized
-                className="flex-none rounded-xl bg-white shadow-[0_5px_15px_rgba(0,0,0,0.08),0_15px_35px_-5px_rgba(25,28,33,0.2)] ring-1 ring-gray-950/5"
-              />
-              <Image
-                alt="Device"
-                src={userButton2}
-                unoptimized
-                className="flex-none rounded-xl bg-white shadow-[0_5px_15px_rgba(0,0,0,0.08),0_15px_35px_-5px_rgba(25,28,33,0.2)] ring-1 ring-gray-950/5"
-              />
-            </div>
-            <div className="space-y-8 -translate-y-[22.5rem]">
-              <Image
-                alt="Device"
-                src={signIn}
-                unoptimized
-                className="flex-none rounded-xl bg-white shadow-[0_5px_15px_rgba(0,0,0,0.08),0_15px_35px_-5px_rgba(25,28,33,0.2)] ring-1 ring-gray-950/5"
-              />
-              <Image
-                alt="Device"
-                src={screenshotDevices}
-                unoptimized
-                className="flex-none rounded-xl bg-white shadow-[0_5px_15px_rgba(0,0,0,0.08),0_15px_35px_-5px_rgba(25,28,33,0.2)] ring-1 ring-gray-950/5"
-              />
-            </div>
-          </div>
-        </div>
-        <div className="absolute left-0 right-0 bottom-0 h-[18.75rem] bg-gradient-to-t from-white" />
-      </main>
-      <LearnMore cards={CARDS} />
-      <Footer />
-    </>
-  )
+
+    </div>
+  );
 }
+
+// Nota: Este código assume que tens o Tailwind CSS configurado.
+// Usei um componente <Button> que pode ou não existir no teu projeto.
+// Se não tiveres o componente <Button>, comenta as linhas que o usam e descomenta as linhas que usam a tag <a> simples com as classes Tailwind fornecidas.
