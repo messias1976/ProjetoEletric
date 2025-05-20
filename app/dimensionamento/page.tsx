@@ -1,180 +1,229 @@
 // calcelectric/app/dimensionamento/page.tsx
 
-'use client'; // Este componente precisa ser um Client Component para usar hooks como useState
+'use client';
 
-import { useState } from 'react'; // Hook para gerir o estado no componente
-import Link from 'next/link'; // Já tínhamos, mas vamos garantir
-// Importa o componente CircuitInputForm e a interface Circuit que agora está definida nele
-// Garante que o caminho abaixo (@/app/components/CircuitInputForm) aponta corretamente para o teu ficheiro CircuitInputForm.tsx
-import CircuitInputForm, { Circuit } from '@/app/components/CircuitInputForm';
+import { useState } from 'react';
+import Link from 'next/link';
+import CircuitInputForm, { Circuit } from '../components/CircuitInputForm'; // Caminho relativo
+// --- ALTERAÇÃO AQUI: Caminho de importação para relativo ---
+import {
+  calculateId,
+  selectBreaker,
+  dimensionConductor,
+  standardBreakerSizes,
+  temperatureCorrectionFactors,
+  groupingCorrectionFactors
+} from '../../utils/calculations'; // Caminho relativo agora: sobe duas pastas para a raiz e entra em 'utils'
+// --- FIM DA ALTERAÇÃO ---
 
 
 export default function DimensionamentoPage() {
-  // Estado para armazenar a lista de circuitos. Começa com um circuito vazio por padrão.
-  const [circuits, setCircuits] = useState<Circuit[]>([{ id: 'circuit-1', name: 'Circuito 1', type: '', voltage: '', power: '' }]);
-  const [nextCircuitId, setNextCircuitId] = useState(2); // Contador para gerar IDs únicos
-  const [totalPower, setTotalPower] = useState<number | ''>(''); // Estado para a potência total calculada
-  // Função para adicionar um novo circuito à lista
+  const [circuits, setCircuits] = useState<Circuit[]>([
+    { 
+      id: 'circuit-1', 
+      name: '', 
+      type: '', 
+      voltage: '', 
+      power: '',
+      numberOfPoints: '', 
+      calculatedCurrent: '',
+      installationMethod: '',
+      numberOfLoadedConductors: '',
+      calculatedId: '',
+      selectedBreakerIn: null,
+      selectedConductorSection: null,
+      calculatedIz: ''
+    }
+  ]);
+
+  const [nextCircuitId, setNextCircuitId] = useState(2);
+  const [totalPower, setTotalPower] = useState<number | ''>('');
+  
   const addCircuit = () => {
     const newCircuit: Circuit = {
-      id: `circuit-${nextCircuitId}`, // Gera um ID único
-      name: `Circuito ${nextCircuitId}`, // Nome inicial
-      type: '', // Inicializa novos campos com valores vazios
+      id: `circuit-${nextCircuitId}`,
+      name: '',
+      type: '',
       voltage: '',
       power: '',
-      // Inicializar outros campos que adicionares à interface Circuit aqui
+      numberOfPoints: '',
+      calculatedCurrent: '',
+      installationMethod: '',
+      numberOfLoadedConductors: '',
+      calculatedId: '',
+      selectedBreakerIn: null,
+      selectedConductorSection: null,
+      calculatedIz: ''
     };
-    setCircuits([...circuits, newCircuit]); // Adiciona o novo circuito ao estado existente
-    setNextCircuitId(nextCircuitId + 1); // Incrementa o contador para o próximo ID
+    setCircuits([...circuits, newCircuit]);
+    setNextCircuitId(nextCircuitId + 1);
   };
 
-  // Função para remover um circuito
   const removeCircuit = (id: string) => {
       setCircuits(circuits.filter(circuit => circuit.id !== id));
   };
 
-  // Função para lidar com as mudanças nos dados de um circuito individual (chamada pelo CircuitInputForm)
   const handleCircuitUpdate = (updatedCircuit: Circuit) => {
-      // Encontra o índice do circuito atualizado na lista
       const circuitIndex = circuits.findIndex(circuit => circuit.id === updatedCircuit.id);
-      if (circuitIndex === -1) return; // Se não encontrar, sai (não deve acontecer)
+      if (circuitIndex === -1) return;
 
-      // Cria uma nova lista de circuitos com o circuito atualizado na sua posição
-      const newCircuits = [...circuits]; // Copia a lista existente
-      newCircuits[circuitIndex] = updatedCircuit; // Substitui o circuito antigo pelo atualizado
-
-      // Atualiza o estado global da lista de circuitos
+      const newCircuits = [...circuits];
+      newCircuits[circuitIndex] = updatedCircuit;
       setCircuits(newCircuits);
   };
 
-  // Função para Calcular o Dimensionamento
    const calculateDimensionamento = () => {
      console.log("Iniciando cálculo...");
      console.log("Dados de entrada dos circuitos:", circuits);
 
-     let calculatedTotalPower = 0; // Variável para somar a potência total
+     let calculatedTotalPower = 0;
      const updatedCircuits = circuits.map(circuit => {
-     let currentIb: number | '' = ''; // Corrente de operação para este circuito
+        let currentIb: number | '' = '';
+        let currentId: number | '' = '';
+        let selectedIn: number | null = null;
+        let conductorResult: { section: string, iz: number } | null = null;
 
-     // Verifica se Potência e Tensão estão preenchidas e são números válidos
        if (circuit.power !== '' && circuit.power !== null && circuit.power > 0 &&
           (circuit.voltage === '127' || circuit.voltage === '220')) {
 
-       const power = Number(circuit.power); // Garante que é um número
-       const voltage = Number(circuit.voltage); // Garante que é um número
+          const power = Number(circuit.power);
+          const voltage = Number(circuit.voltage);
+          const numLoadedConductors = Number(circuit.numberOfLoadedConductors);
+          const installationMethod = circuit.installationMethod;
 
-            if (!isNaN(power) && !isNaN(voltage) && voltage > 0) {
-     // Calcula a Corrente de Operação (Ib = P/V para monofásico)
-     // Assumindo fator de potência = 1 por enquanto
-                currentIb = power / voltage;
+          if (!isNaN(power) && !isNaN(voltage) && voltage > 0) {
+              currentIb = power / voltage;
+              calculatedTotalPower += power;
 
-     // Soma a potência deste circuito à potência total
-                 calculatedTotalPower += power;
+              if (typeof currentIb === 'number' && currentIb > 0) {
+                  currentId = calculateId(currentIb);
 
-     // Corrigido: log padrão JavaScript
-                  console.log(`Circuito ${circuit.name}: Potência=${power}W, Tensão=${voltage}V, Ib=${Number(currentIb).toFixed(2)}A`); // Log para verificar
-                         } else {
-                           console.warn(`Circuito ${circuit.name}: Potência ou Tensão inválida para cálculo.`);
-                          }
-                         } else {
-                           console.warn(`Circuito ${circuit.name}: Potência ou Tensão não preenchida para cálculo.`);
-     }
+                  if (currentId > 0) {
+                      selectedIn = selectBreaker(currentId);
 
-     // Retorna uma cópia do circuito com a corrente calculada adicionada
+                      // O tipo de installationMethod aqui é garantido ser 'b1' ou 'b2'
+                      // porque 'installationMethod' (string vazia) é avaliado como falso na condição
+                      if (selectedIn && installationMethod && numLoadedConductors > 0) {
+                          const defaultTemperature = 30; // Pode ser um input futuro
+                          
+                          conductorResult = dimensionConductor(
+                              currentId,
+                              selectedIn,
+                              // Adiciona um cast de tipo para 'b1' | 'b2' para garantir, pois a função espera isso
+                              // mas a variável installationMethod é de tipo mais amplo.
+                              // A condição 'if (installationMethod)' já garante que não é ''
+                              installationMethod as 'b1' | 'b2', 
+                              numLoadedConductors,
+                              defaultTemperature
+                          );
+                      }
+                  }
+              }
+
+              console.log(`Circuito ${circuit.name || `Circuito ${circuits.indexOf(circuit) + 1}`}: Potência=${power}W, Tensão=${voltage}V, Ib=${Number(currentIb).toFixed(2)}A`);
+              if (currentId) console.log(`  Id: ${Number(currentId).toFixed(2)}A`);
+              if (selectedIn) console.log(`  Disjuntor (In): ${selectedIn}A`);
+              if (conductorResult) console.log(`  Condutor (Seção): ${conductorResult.section}mm², Iz: ${conductorResult.iz.toFixed(2)}A`);
+
+          } else {
+            console.warn(`Circuito ${circuit.name || `Circuito ${circuits.indexOf(circuit) + 1}`}: Potência ou Tensão inválida para cálculo.`);
+          }
+        } else {
+          console.warn(`Circuito ${circuit.name || `Circuito ${circuits.indexOf(circuit) + 1}`}: Potência, Tensão, Método de Instalação ou Nº de Condutores Carregados não preenchida para cálculo.`);
+        }
+
          return {
              ...circuit,
-             calculatedCurrent: currentIb
-         }; // <-- CORRIGIDO: Garante que está exato assim
-       }); // <-- Fim do map()
+             calculatedCurrent: currentIb,
+             calculatedId: currentId,
+             selectedBreakerIn: selectedIn,
+             selectedConductorSection: conductorResult ? conductorResult.section : null,
+             calculatedIz: conductorResult ? conductorResult.iz : ''
+         };
+       });
 
-     // Atualiza o estado com a potência total e os circuitos com a corrente calculada
       setTotalPower(calculatedTotalPower);
-     // --- DESCOMENTA ESTA LINHA ---
-      setCircuits(updatedCircuits); // <-- ESTA LINHA AGORA DEVE ESTAR ATIVA
-     // --- FIM DA LINHA DESCOMENTADA ---
-
-     // Opcional: Remove ou comenta o log de debug do updatedCircuits se não for mais necessário
-     // console.log("Conteúdo de updatedCircuits antes de setCircuits:", updatedCircuits);
+      setCircuits(updatedCircuits);
 
       console.log("Potência Total Calculada:", calculatedTotalPower, "W");
       console.log("Cálculo inicial concluído.");
     };
-  // --- Fim da Função de Cálculo Modificada ---
-
 
   return (
-    // Container principal com fundo e padding
-    <div className="min-h-screen bg-blue-50 py-12 px-4 sm:px-6 lg:px-8"> {/* Fundo azul claro, padding */}
+    <div className="min-h-screen bg-blue-50 py-12 px-4 sm:px-6 lg:px-8">
 
-      <div className="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-lg border border-blue-100"> {/* Container centralizado, largura maior, estilo de cartão */}
+      <div className="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-lg border border-blue-100">
 
-        <h1 className="text-3xl font-bold text-blue-800 text-center mb-8">Calculadora de Dimensionamento Elétrico</h1> {/* Título centralizado */}
+        <h1 className="text-3xl font-bold text-blue-800 text-center mb-8">Calculadora de Dimensionamento Elétrico</h1>
 
-        {/* Área para adicionar e listar circuitos */}
         <div className="mb-8">
           <h2 className="text-2xl font-semibold text-gray-800 mb-4">Circuitos</h2>
 
-          {/* Botão para Adicionar Circuito */}
-           {/* Usando classes Tailwind para estilizar como um botão */}
           <button
-            onClick={addCircuit} // Chama a função addCircuit ao clicar
+            onClick={addCircuit}
             className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-200"
           >
             + Adicionar Circuito
           </button>
         </div>
 
-        {/* --- Renderiza o Componente CircuitInputForm para cada circuito --- */}
-         {/* Mapeia a lista de circuitos e renderiza um formulário para cada um */}
         <div>
             {circuits.map((circuit, index) => (
-                // Renderiza o componente CircuitInputForm, passando os dados do circuito e funções
                 <CircuitInputForm
-                    key={circuit.id} // Chave única para a lista (essencial para React)
-                    circuit={circuit} // Passa o objeto circuit atual para o formulário
-                    index={index} // Passa o índice na lista
-                    onCircuitChange={handleCircuitUpdate} // Passa a função para atualizar o estado pai quando um campo mudar
-                    onRemoveCircuit={removeCircuit} // Passa a função para o botão "Remover"
+                    key={circuit.id}
+                    circuit={circuit}
+                    index={index}
+                    onCircuitChange={handleCircuitUpdate}
+                    onRemoveCircuit={removeCircuit}
                 />
             ))}
-            {circuits.length === 0 && ( // Mostra mensagem se não houver circuitos adicionados
+            {circuits.length === 0 && (
                  <p className="text-gray-600 text-center">Nenhum circuito adicionado ainda. Clique em "+ Adicionar Circuito".</p>
             )}
         </div>
 
 
-        {/* Futura área para Resultados e Botão de Cálculo */}
-        {/* Área para Resultados e Botão de Cálculo */}
-        <div className="mt-12 pt-8 border-t-2 border-blue-200"> {/* Margem superior e borda para separar */}
+        <div className="mt-12 pt-8 border-t-2 border-blue-200">
              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Resultados do Dimensionamento</h2>
-              {/* Exibe a potência total calculada */}
               {totalPower !== '' && totalPower > 0 ? (
-                  <p className="text-gray-800 text-xl font-semibold mb-6">Potência Total da Instalação: {totalPower.toFixed(2)} W</p> // Mostra a potência se calculada
+                  <p className="text-gray-800 text-xl font-semibold mb-6">Potência Total da Instalação: {totalPower.toFixed(2)} W</p>
               ) : (
-                   <p className="text-gray-600 mb-6">Os resultados aparecerão aqui após o cálculo.</p> // Placeholder se ainda não calculou
+                   <p className="text-gray-600 mb-6">Os resultados aparecerão aqui após o cálculo.</p>
               )}
               
-              {/* Botão de Calcular */}
               <button
-                onClick={calculateDimensionamento} // Chama a função de cálculo ao clicar
+                onClick={calculateDimensionamento}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-200"
               >
                 Calcular Dimensionamento
               </button>
 
-              {/* Futura área onde os resultados detalhados serão exibidos */}
-              {/* Exemplo: */}
-              {/* <div className="mt-6 bg-blue-100 p-4 rounded-md">
-                    <h3 className="text-xl font-semibold text-blue-800">Resumo:</h3>
-                    <p>Potência Total: [Valor] W</p>
-                    <p>Corrente Total: [Valor] A</p>
-                     ... resultados por circuito ...
-              </div> */}
+            {/* --- ÁREA PARA EXIBIR OS RESULTADOS DETALHADOS POR CIRCUITO --- */}
+            {circuits.map((circuit, index) => (
+                // Exibe os resultados apenas se houver algum cálculo
+                (circuit.calculatedId || circuit.selectedBreakerIn || circuit.selectedConductorSection || circuit.calculatedIz) && (
+                    <div key={`results-${circuit.id}`} className="mt-6 bg-blue-50 p-4 rounded-md border border-blue-200">
+                        <h3 className="text-xl font-semibold text-blue-800 mb-2">
+                            {circuit.name && circuit.name !== '' ? circuit.name : `Circuito ${index + 1}`}
+                        </h3>
+                        {circuit.calculatedCurrent !== '' && <p>Corrente de Operação (Ib): <span className="font-medium">{Number(circuit.calculatedCurrent).toFixed(2)} A</span></p>}
+                        {circuit.calculatedId !== '' && <p>Corrente de Projeto (Id): <span className="font-medium">{Number(circuit.calculatedId).toFixed(2)} A</span></p>}
+                        {circuit.selectedBreakerIn !== null && <p>Disjuntor (In): <span className="font-medium">{circuit.selectedBreakerIn} A</span></p>}
+                        {circuit.selectedConductorSection !== null && <p>Seção do Condutor (S): <span className="font-medium">{circuit.selectedConductorSection} mm²</span></p>}
+                        {circuit.calculatedIz !== '' && <p>Capacidade Condução Condutor (Iz): <span className="font-medium">{Number(circuit.calculatedIz).toFixed(2)} A</span></p>}
+                        {/* Mensagem de erro ou aviso se o dimensionamento do condutor falhar */}
+                        {circuit.calculatedId && circuit.selectedBreakerIn && circuit.installationMethod && circuit.numberOfLoadedConductors && !circuit.selectedConductorSection && (
+                            <p className="text-red-600">Atenção: Não foi possível dimensionar o condutor para este circuito com os dados fornecidos e as tabelas disponíveis.</p>
+                        )}
+                    </div>
+                )
+            ))}
+            {/* --- FIM DA ÁREA DE RESULTADOS --- */}
 
         </div>
 
 
-      </div> {/* Fim do Cartão principal */}
-    </div> // Fim do container principal com fundo
+      </div>
+    </div>
   );
 }
