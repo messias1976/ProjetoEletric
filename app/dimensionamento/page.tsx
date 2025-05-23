@@ -1,51 +1,53 @@
 // calcelectric/app/dimensionamento/page.tsx
-'use client'; // Mantenha esta diretiva
+'use client';
 
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
-import CircuitInputForm from '../components/CircuitInputForm'; // Caminho para 'app/components'
 import { useState } from 'react';
-import { Circuit } from '../../types/circuit'; // <--- Caminho corrigido novamente para a raiz do projeto
+import CircuitInputForm from '../components/CircuitInputForm';
+import { Circuit } from '../../types/circuit';
 
 export default function DimensionamentoPage() {
   const { isLoaded, isSignedIn, user } = useUser();
   const router = useRouter();
 
-  // Estado para um circuito de teste, com tipos de string para inputs
+  // ***** CONSOLE LOGS PARA DEPURAR O PLANO *****
+  console.log("DEBUG: Usuário carregado no Dimensionamento:", user);
+  console.log("DEBUG: Plano do usuário no Dimensionamento:", user?.publicMetadata?.plan);
+  // **********************************************
+
+  // Estado para um circuito de teste. Garante que os valores são numéricos ou strings vazias conforme o tipo.
   const [testCircuit, setTestCircuit] = useState<Circuit>({
     id: 'test-circuit-1',
     name: 'Circuito Teste',
-    type: '',
-    power: '0', // Inicialize como string '0' ou ''
-    voltage: '0', // Inicialize como string '0' ou ''
-    numberOfPoints: '0', // Inicialize como string '0'
-    installationMethod: '',
-    numberOfLoadedConductors: '0', // Inicialize como string '0'
-    ambientTemperature: '0', // Inicialize como string '0'
-    numberOfGroupedCircuits: '0', // Inicialize como string '0'
-    errors: {}, // Mantenha como objeto vazio
-
-    // Inicialize campos de resultado de cálculo conforme a interface Circuit
-    calculatedCurrent: '', // Pode ser '' ou 0 se a interface permitir number | ''
-    calculatedId: '', // Pode ser '' ou 0
-    selectedBreakerIn: null,
-    selectedConductorSection: null,
-    calculatedIz: null,
+    type: '0', // CORRIGIDO: string vazia
+    power: '0',
+    voltage:'0',
+    installationMethod: '0', // CORRIGIDO: string vazia
+    numberOfLoadedConductors: '0', // CORRIGIDO: string vazia
+    ambientTemperature: '0', // CORRIGIDO: string vazia
+    numberOfGroupedCircuits: '0', // CORRIGIDO: string vazia
+    errors: {}, // Inicializa como objeto vazio
   });
 
-  // Funções de manipulação para as props do CircuitInputForm
+  // Funções de manipulação para o CircuitInputForm
   const handleCircuitChange = (updatedCircuit: Circuit) => {
     setTestCircuit(updatedCircuit);
+    console.log('DEBUG: Circuito atualizado:', updatedCircuit); // Para depuração
   };
 
   const handleRemoveCircuit = (id: string) => {
-    console.log('Remover circuito:', id);
-    // Em um cenário real, aqui você implementaria a remoção de um circuito de um array
+    console.log(`DEBUG: Remover Circuito: ${id}`);
+    // Em um cenário real, você removeria o circuito do estado aqui.
   };
 
   // Lógica de Carregamento do Clerk
   if (!isLoaded) {
-    return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
+        Carregando Calculadora...
+      </div>
+    );
   }
 
   // Lógica de Autenticação
@@ -54,27 +56,25 @@ export default function DimensionamentoPage() {
     return null;
   }
 
-  // Lógica de Verificação de Plano
-  const userPlan = user.publicMetadata?.plan;
-  const requiredPlan = 'premium'; // Define o plano necessário para acessar esta página
-  if (userPlan !== requiredPlan) {
-    router.push('/upgrade'); // Redireciona para a página de upgrade se o plano não for premium
-    return null;
+  // Lógica de Proteção de Plano
+  if (user?.publicMetadata?.plan !== 'premium') {
+     console.log("DEBUG: Redirecionando para upgrade. Plano atual não é 'premium'. Plano lido:", user?.publicMetadata?.plan);
+     router.push('/upgrade');
+     return null;
   }
 
-  // Se tudo estiver OK (logado e com plano 'premium'), renderiza a calculadora
   return (
-    <main className="min-h-screen bg-gray-100 p-4">
-      <div className="container mx-auto">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">Calculadora de Dimensionamento Elétrico</h1>
-        {/* Renderiza o CircuitInputForm, passando as props necessárias */}
+    <main className="min-h-screen bg-gray-100 p-8">
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">Calculadora de Dimensionamento Elétrico</h1>
+      <div className="flex flex-col space-y-4">
         <CircuitInputForm
           circuit={testCircuit}
-          index={0} // Índice 0 para este circuito de teste
           onCircuitChange={handleCircuitChange}
-          onRemoveCircuit={handleRemoveCircuit}
+          onRemove={handleRemoveCircuit}
         />
+        {/* Você pode adicionar mais CircuitInputForm aqui ou lógica para adicionar dinamicamente */}
       </div>
+      {/* Adicione botões para adicionar novos circuitos, realizar o cálculo final, etc. */}
     </main>
   );
 }

@@ -1,11 +1,12 @@
 // calcelectric/app/dashboard/page.tsx
-'use client'; // Mantenha esta diretiva
+'use client';
 
 import { UserButton, useUser } from '@clerk/nextjs';
-import Link from 'next/link'; // Importe o componente Link
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 export default function DashboardPage() {
+  // Removido 'unsafe_reload' aqui
   const { isSignedIn, user, isLoaded } = useUser();
   const router = useRouter();
 
@@ -21,7 +22,7 @@ export default function DashboardPage() {
   // Lógica de Autenticação (redireciona se não estiver logado)
   if (!isSignedIn) {
     router.push('/sign-in');
-    return null; // Não renderiza nada enquanto redireciona
+    return null;
   }
 
   // Dados do usuário, com fallback para segurança
@@ -53,6 +54,8 @@ export default function DashboardPage() {
           </p>
         </div>
       </div>
+
+      {/* O botão "Recarregar Dados do Usuário" foi removido daqui */}
 
       {/* Seção de Navegação (Botões) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
