@@ -1,8 +1,10 @@
+// calcelectric/app/sign-up/[[...sign-up]]/page.tsx
 import { SignUp } from "@clerk/nextjs";
 
 export default function Page() {
   return (
-    <div className="flex justify-center py-24">
+    // Este div envolve o componente SignUp para centralizá-lo
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <SignUp />
     </div>
   );
