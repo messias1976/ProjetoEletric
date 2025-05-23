@@ -1,52 +1,71 @@
-// calcelectric/app/page.tsx
+// calcelectric/app/page.tsx - Versão Corrigida com Login e Cartões de Funcionalidade
 
 import Link from 'next/link';
-//import { Button } from '@/components/ui/button'; // Assumindo que tens um componente Button (opcional, podes usar um <a> normal)
-
-// Se não tens um componente Button, substitui a importação acima por:
-// import Link from 'next/link';
-// E nos botões, usa a tag <a> com classes Tailwind
-
 
 export default function HomePage() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] py-12 px-4 text-center bg-gray-50"> {/* Ajustado min-height para considerar um possível header, padding, fundo suave */}
-      
-      <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-        Bem-vindo à Calculadora de Dimensionamento Elétrico
-      </h1>
-      
-      <p className="text-xl text-gray-600 mb-8 max-w-2xl">
-        Dimensione instalações elétricas residenciais de forma rápida e fácil, seguindo as normas NBR.
-      </p>
-      
-      <div className="flex space-x-4"> {/* Container para alinhar botões */}
-        
-        {/* Botão/Link para a página de Login */}
-        <Link href="/sign-in" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200">
-        Entrar {/* O texto agora vai direto dentro do Link */}
-    </Link>
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 text-white">
 
-        {/* Botão/Link para a página de Registo */}
-        <Link href="/sign-up" className="bg-transparent border border-blue-600 text-blue-600 hover:bg-blue-50 font-semibold py-3 px-6 rounded-lg transition duration-200">
-       Criar Conta {/* O texto agora vai direto dentro do Link */}
-    </Link>
+      <div className="text-center mb-10">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight">
+          Calcule Fácil
+        </h1>
+        <p className="mt-4 text-lg sm:text-xl md:text-2xl font-light opacity-90 max-w-3xl mx-auto">
+          Sua ferramenta completa para dimensionamento elétrico
+        </p>
+      </div>
+
+      {/* Seção de Login/Cadastro */}
+      <div className="mb-12 flex flex-col items-center"> {/* Aumentei a margem inferior para separar do próximo bloco */}
+        <h2 className="text-2xl sm:text-3xl font-semibold mb-6 text-white text-center">
+          Comece a dimensionar agora!
+        </h2>
+        <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-6"> {/* Espaçamento responsivo para botões */}
+          <Link href="/sign-in" className="bg-white text-blue-600 hover:bg-blue-100 font-semibold py-3 px-8 rounded-full shadow-lg transition duration-300 text-lg sm:text-xl transform hover:-translate-y-1">
+            Entrar
+          </Link>
+          <Link href="/sign-up" className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-blue-600 font-semibold py-3 px-8 rounded-full shadow-lg transition duration-300 text-lg sm:text-xl transform hover:-translate-y-1">
+            Criar Conta
+          </Link>
+        </div>
+      </div>
+
+      {/* Seção de Funcionalidades/Calculadoras */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 w-full max-w-5xl px-4">
+        {/* Cartão de Dimensionamento Elétrico - Agora acessível diretamente */}
+        <Link href="/dimensionamento" legacyBehavior>
+          <a className="bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 sm:p-8 flex flex-col items-center justify-center text-center border border-white border-opacity-20 transform hover:-translate-y-1">
+            <svg className="h-12 w-12 sm:h-16 sm:w-16 text-white mb-4 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+            <h2 className="text-2xl sm:text-3xl font-semibold mb-2">Dimensionamento</h2>
+            <p className="text-base sm:text-lg opacity-80">Calcule cabos, disjuntores e correntes para seus circuitos.</p>
+          </a>
+        </Link>
+
+        {/* Cartão Queda de Tensão (Futuro) */}
+        <a href="#" className="bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg rounded-xl shadow-lg p-6 sm:p-8 flex flex-col items-center justify-center text-center border border-white border-opacity-20 opacity-60 cursor-not-allowed">
+          <svg className="h-12 w-12 sm:h-16 sm:w-16 text-white mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v18M5 9h14M5 15h14"></path>
+          </svg>
+          <h2 className="text-2xl sm:text-3xl font-semibold mb-2">Queda de Tensão</h2>
+          <p className="text-base sm:text-lg">Em breve: Calcule a queda de tensão em suas instalações.</p>
+        </a>
+
+        {/* Cartão Outras Ferramentas (Futuro) */}
+        <a href="#" className="bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg rounded-xl shadow-lg p-6 sm:p-8 flex flex-col items-center justify-center text-center border border-white border-opacity-20 opacity-60 cursor-not-allowed">
+          <svg className="h-12 w-12 sm:h-16 sm:w-16 text-white mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2H5a2 2 0 00-2 2v2m14 0h2m-2 0h-2M9 11V9m6 2V9m2 2V9"></path>
+          </svg>
+          <h2 className="text-2xl sm:text-3xl font-semibold mb-2">Outras Ferramentas</h2>
+          <p className="text-base sm:text-lg">Mais calculadoras e recursos para você!</p>
+        </a>
 
       </div>
-      
-      {/* Opcional: Adicionar um link para a calculadora de dimensionamento, que será pública por agora */}
-      {/* No futuro, podes proteger esta rota */}
-       <div className="mt-12">
-       <Link href="/dimensionamento" className="text-blue-600 hover:underline text-lg">
-       Ir para a Calculadora (Acesso Gratuito) {/* O texto agora vai direto dentro do Link */}
-   </Link>
-       </div>
 
-
+      <footer className="mt-16 sm:mt-20 text-gray-200 text-xs sm:text-sm opacity-80">
+        © {new Date().getFullYear()} Calcule Fácil. Todos os direitos reservados.
+      </footer>
     </div>
   );
 }
-
-// Nota: Este código assume que tens o Tailwind CSS configurado.
-// Usei um componente <Button> que pode ou não existir no teu projeto.
-// Se não tiveres o componente <Button>, comenta as linhas que o usam e descomenta as linhas que usam a tag <a> simples com as classes Tailwind fornecidas.

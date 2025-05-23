@@ -1,180 +1,199 @@
 // calcelectric/components/CircuitInputForm.tsx
 
-'use client';
+import React from 'react';
+import { Circuit } from '../../types/circuit';
+import { TrashIcon } from '@heroicons/react/24/outline';
 
-import { useState } from 'react';
-
-export interface Circuit {
-  id: string;
-  name?: string;
-  type: '' | 'lighting' | 'tug' | 'tue';
-  voltage: '' | '127' | '220';
-  power: number | '';
-  numberOfPoints?: number | '';
-  calculatedCurrent?: number | ''; // Corrente de Operação (Ib)
-  
-  installationMethod?: '' | 'b1' | 'b2';
-  numberOfLoadedConductors?: number | '';
-
-  // --- NOVOS CAMPOS PARA RESULTADOS DO DIMENSIONAMENTO ---
-  calculatedId?: number | ''; // Corrente de Projeto (Id)
-  selectedBreakerIn?: number | null; // Corrente Nominal do Disjuntor (In)
-  selectedConductorSection?: string | null; // Seção do Condutor (mm²)
-  calculatedIz?: number | ''; // Capacidade de Condução do Condutor (Iz)
-  // --- FIM DOS NOVOS CAMPOS ---
-}
-// ... o resto do código de CircuitInputForm.tsx permanece o mesmo por enquanto ...
-
-
-// Define as props que este componente irá receber
 interface CircuitInputFormProps {
-  circuit: Circuit; // Recebe os dados atuais do circuito (agora com mais campos)
-  index: number; // Posição do circuito na lista (para exibição)
-  onCircuitChange: (updatedCircuit: Circuit) => void; // Função para notificar o pai sobre as mudanças
-  onRemoveCircuit: (id: string) => void; // Função para remover este circuito
+  circuit: Circuit;
+  index: number;
+  onCircuitChange: (circuit: Circuit) => void;
+  onRemoveCircuit: (id: string) => void;
 }
 
-export default function CircuitInputForm({ circuit, index, onCircuitChange, onRemoveCircuit }: CircuitInputFormProps) {
-  console.log(`[CircuitInputForm] Circuito ID: ${circuit.id}, calculatedCurrent prop recebida:`, circuit.calculatedCurrent);
+const CircuitInputForm: React.FC<CircuitInputFormProps> = ({ circuit, index, onCircuitChange, onRemoveCircuit }) => {
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
-    const newValue = type === 'number' && value !== '' ? parseFloat(value) : value;
-    
-    const updatedCircuit = {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    const newErrors = { ...circuit.errors };
+    delete newErrors[name];
+
+    onCircuitChange({
       ...circuit,
-      [name]: type === 'number' && newValue === '' ? '' : newValue,
-    };
-    onCircuitChange(updatedCircuit);
+      [name]: value,
+      errors: newErrors,
+    });
   };
 
-
-  // Renderiza o formulário de entrada para um único circuito
   return (
-    <div className="bg-gray-100 p-6 rounded-md shadow-sm mb-6 border border-gray-200">
-      
-      <div className="flex justify-between items-center mb-4">
-         <h3 className="text-xl font-semibold text-gray-700">
-           {circuit.name && circuit.name !== '' ? circuit.name : `Circuito ${index + 1}`}
-         </h3>
-           <button
-             onClick={() => onRemoveCircuit(circuit.id)}
-             className="text-red-600 hover:text-red-800 text-sm font-medium transition duration-200"
-           >
-             Remover
-           </button>
-      </div>
+    <div className="bg-gray-50 p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200 mb-4 sm:mb-6 relative"> {/* Ajustado p-4 sm:p-6 e mb-4 sm:mb-6 */}
+      <h3 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4 border-b pb-2"> {/* Ajustado texto e mb */}
+        Circuito {index + 1}: {circuit.name || 'Novo Circuito'}
+      </h3>
 
+      <button
+        onClick={() => onRemoveCircuit(circuit.id)}
+        className="absolute top-3 right-3 sm:top-4 sm:right-4 text-red-500 hover:text-red-700 transition duration-200" // Ajustado top/right
+        title="Remover este circuito"
+      >
+        <TrashIcon className="h-5 w-5 sm:h-6 sm:w-6" /> {/* Ajustado tamanho do ícone */}
+      </button>
 
-      {/* --- CAMPOS DE ENTRADA DO FORMULÁRIO --- */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        
-        {/* Campo Nome do Circuito (Opcional) */}
-        <div>
-          <label htmlFor={`name-${circuit.id}`} className="block text-sm font-medium text-gray-700 mb-1">Nome Personalizado (Opcional)</label>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4"> {/* Ajustado gaps para telas menores */}
+        {/* Nome do Circuito */}
+        <div className="flex flex-col">
+          <label htmlFor={`name-${circuit.id}`} className="text-sm font-medium text-gray-700 mb-1">
+            Nome do Circuito
+          </label>
           <input
             type="text"
             id={`name-${circuit.id}`}
             name="name"
-            value={circuit.name || ''}
-            onChange={handleInputChange}
-            placeholder={`Ex: Circuito ${index + 1}`}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            value={circuit.name}
+            onChange={handleChange}
+            placeholder="Ex: Iluminação Sala"
+            className={`p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm ${circuit.errors.name ? 'border-red-500' : 'border-gray-300'}`} // Reduzido p para text-sm
           />
+          {circuit.errors.name && <p className="text-red-500 text-xs mt-1">{circuit.errors.name}</p>}
         </div>
 
-        {/* Campo Tipo de Circuito */}
-        <div>
-          <label htmlFor={`type-${circuit.id}`} className="block text-sm font-medium text-gray-700 mb-1">Tipo de Circuito</label>
+        {/* Tipo de Circuito */}
+        <div className="flex flex-col">
+          <label htmlFor={`type-${circuit.id}`} className="text-sm font-medium text-gray-700 mb-1">
+            Tipo de Circuito
+          </label>
           <select
             id={`type-${circuit.id}`}
             name="type"
             value={circuit.type}
-            onChange={handleInputChange}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            onChange={handleChange}
+            className={`p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm ${circuit.errors.type ? 'border-red-500' : 'border-gray-300'}`}
           >
-            <option value="">-- Selecione --</option>
-            <option value="lighting">Iluminação</option>
-            <option value="tug">Tomada de Uso Geral (TUG)</option>
-            <option value="tue">Tomada de Uso Específico (TUE)</option>
+            <option value="">Selecione...</option>
+            <option value="iluminacao">Iluminação</option>
+            <option value="tomadas">Tomadas de Uso Geral (TUG)</option>
+            <option value="tues">Tomadas de Uso Específico (TUE)</option>
+            <option value="chuveiro">Chuveiro</option>
+            <option value="ar_condicionado">Ar Condicionado</option>
           </select>
+          {circuit.errors.type && <p className="text-red-500 text-xs mt-1">{circuit.errors.type}</p>}
         </div>
 
-         {/* Campo Tensão do Circuito */}
-        <div>
-          <label htmlFor={`voltage-${circuit.id}`} className="block text-sm font-medium text-gray-700 mb-1">Tensão (V)</label>
-          <select
+        {/* Potência (W) */}
+        <div className="flex flex-col">
+          <label htmlFor={`power-${circuit.id}`} className="text-sm font-medium text-gray-700 mb-1">
+            Potência (W)
+          </label>
+          <input
+            type="number"
+            id={`power-${circuit.id}`}
+            name="power"
+            value={circuit.power}
+            onChange={handleChange}
+            placeholder="Ex: 1500"
+            className={`p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm ${circuit.errors.power ? 'border-red-500' : 'border-gray-300'}`}
+          />
+          {circuit.errors.power && <p className="text-red-500 text-xs mt-1">{circuit.errors.power}</p>}
+        </div>
+
+        {/* Tensão (V) */}
+        <div className="flex flex-col">
+          <label htmlFor={`voltage-${circuit.id}`} className="text-sm font-medium text-gray-700 mb-1">
+            Tensão (V)
+          </label>
+          <input
+            type="number"
             id={`voltage-${circuit.id}`}
             name="voltage"
             value={circuit.voltage}
-            onChange={handleInputChange}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-          >
-            <option value="">-- Selecione --</option>
-            <option value="127">127V</option>
-            <option value="220">220V</option>
-          </select>
+            onChange={handleChange}
+            placeholder="Ex: 127 ou 220"
+            className={`p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm ${circuit.errors.voltage ? 'border-red-500' : 'border-gray-300'}`}
+          />
+          {circuit.errors.voltage && <p className="text-red-500 text-xs mt-1">{circuit.errors.voltage}</p>}
         </div>
 
-        {/* Campo Potência */}
-        <div>
-             <label htmlFor={`power-${circuit.id}`} className="block text-sm font-medium text-gray-700 mb-1">Potência Total do Circuito (W)</label>
-             <input
-               type="number"
-               id={`power-${circuit.id}`}
-               name="power"
-               value={circuit.power}
-               onChange={handleInputChange}
-               min="0"
-               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-             />
-         </div>
+        {/* Método de Instalação */}
+        <div className="flex flex-col">
+          <label htmlFor={`installationMethod-${circuit.id}`} className="text-sm font-medium text-gray-700 mb-1">
+            Método de Instalação
+          </label>
+          <select
+            id={`installationMethod-${circuit.id}`}
+            name="installationMethod"
+            value={circuit.installationMethod}
+            onChange={handleChange}
+            className={`p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm ${circuit.errors.installationMethod ? 'border-red-500' : 'border-gray-300'}`}
+          >
+            <option value="">Selecione...</option>
+            <option value="b1">B1 (Eletroduto em alvenaria)</option>
+            <option value="b2">B2 (Cabo multipolar em eletroduto)</option>
+          </select>
+          {circuit.errors.installationMethod && <p className="text-red-500 text-xs mt-1">{circuit.errors.installationMethod}</p>}
+        </div>
 
-         {/* --- NOVOS CAMPOS ADICIONADOS AQUI --- */}
-         {/* Campo Método de Instalação */}
-         <div>
-           <label htmlFor={`installationMethod-${circuit.id}`} className="block text-sm font-medium text-gray-700 mb-1">Método de Instalação</label>
-           <select
-             id={`installationMethod-${circuit.id}`}
-             name="installationMethod"
-             value={circuit.installationMethod || ''}
-             onChange={handleInputChange}
-             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-           >
-             <option value="">-- Selecione --</option>
-             <option value="b1">Eletroduto embutido (até 3 cond. carregados)</option>
-             <option value="b2">Eletroduto aparente ou embutido (mais de 3 cond. carregados)</option>
-             {/* Poderíamos adicionar mais métodos (C, D, etc.) no futuro */}
-           </select>
-         </div>
+        {/* Número de Condutores Carregados */}
+        <div className="flex flex-col">
+          <label htmlFor={`numberOfLoadedConductors-${circuit.id}`} className="text-sm font-medium text-gray-700 mb-1">
+            Nº de Condutores Carregados
+          </label>
+          <select
+            id={`numberOfLoadedConductors-${circuit.id}`}
+            name="numberOfLoadedConductors"
+            value={circuit.numberOfLoadedConductors}
+            onChange={handleChange}
+            className={`p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm ${circuit.errors.numberOfLoadedConductors ? 'border-red-500' : 'border-gray-300'}`}
+          >
+            <option value="">Selecione...</option>
+            <option value="2">2 (Fase-Fase ou Fase-Neutro)</option>
+            <option value="3">3 (3 Fases ou 2 Fases + Neutro)</option>
+          </select>
+          {circuit.errors.numberOfLoadedConductors && <p className="text-red-500 text-xs mt-1">{circuit.errors.numberOfLoadedConductors}</p>}
+        </div>
 
-         {/* Campo Número de Condutores Carregados */}
-         <div>
-           <label htmlFor={`numberOfLoadedConductors-${circuit.id}`} className="block text-sm font-medium text-gray-700 mb-1">Nº de Condutores Carregados</label>
-           <input
-             type="number"
-             id={`numberOfLoadedConductors-${circuit.id}`}
-             name="numberOfLoadedConductors"
-             value={circuit.numberOfLoadedConductors || ''}
-             onChange={handleInputChange}
-             min="1"
-             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-           />
-         </div>
-         {/* --- FIM DOS NOVOS CAMPOS --- */}
+        {/* Temperatura Ambiente */}
+        <div className="flex flex-col">
+          <label htmlFor={`ambientTemperature-${circuit.id}`} className="text-sm font-medium text-gray-700 mb-1">
+            Temperatura Ambiente (°C)
+          </label>
+          <input
+            type="number"
+            id={`ambientTemperature-${circuit.id}`}
+            name="ambientTemperature"
+            value={circuit.ambientTemperature}
+            onChange={handleChange}
+            placeholder="Padrão: 30"
+            className={`p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm ${circuit.errors.ambientTemperature ? 'border-red-500' : 'border-gray-300'}`}
+          />
+          {circuit.errors.ambientTemperature && <p className="text-red-500 text-xs mt-1">{circuit.errors.ambientTemperature}</p>}
+          <p className="text-gray-500 text-xs mt-1">
+            Temperatura do local da instalação. Padrão NBR 5410: 30°C.
+          </p>
+        </div>
 
-         {/* Bloco para Corrente Calculada (Ib) */}
-          {circuit.calculatedCurrent !== undefined && circuit.calculatedCurrent !== '' && !isNaN(Number(circuit.calculatedCurrent)) && (
-              <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Corrente Calculada (Ib)</label>
-                  <p className="mt-1 block w-full px-3 py-2 bg-blue-50 rounded-md shadow-sm text-blue-800 font-semibold border border-blue-200 sm:text-sm">
-                     {Number(circuit.calculatedCurrent).toFixed(2)} A
-                  </p>
-              </div>
-          )}
-
-
+        {/* Número de Circuitos Agrupados */}
+        <div className="flex flex-col">
+          <label htmlFor={`numberOfGroupedCircuits-${circuit.id}`} className="text-sm font-medium text-gray-700 mb-1">
+            Nº de Circuitos Agrupados
+          </label>
+          <input
+            type="number"
+            id={`numberOfGroupedCircuits-${circuit.id}`}
+            name="numberOfGroupedCircuits"
+            value={circuit.numberOfGroupedCircuits}
+            onChange={handleChange}
+            placeholder="Padrão: 1"
+            min="1"
+            className={`p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm ${circuit.errors.numberOfGroupedCircuits ? 'border-red-500' : 'border-gray-300'}`}
+          />
+          {circuit.errors.numberOfGroupedCircuits && <p className="text-red-500 text-xs mt-1">{circuit.errors.numberOfGroupedCircuits}</p>}
+          <p className="text-gray-500 text-xs mt-1">
+            Número de circuitos que passam juntos no mesmo eletroduto/bandeja. Padrão: 1 (sem agrupamento).
+          </p>
+        </div>
       </div>
     </div>
   );
-}
+};
+
+export default CircuitInputForm;
