@@ -1,4 +1,5 @@
-// calcelectric/components/CircuitInputForm.tsx
+// calcelectric/app/components/CircuitInputForm.tsx
+'use client'; // <-- Adicione esta linha!
 
 import React from 'react';
 import { Circuit } from '../../types/circuit';
@@ -26,20 +27,20 @@ const CircuitInputForm: React.FC<CircuitInputFormProps> = ({ circuit, index, onC
   };
 
   return (
-    <div className="bg-gray-50 p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200 mb-4 sm:mb-6 relative"> {/* Ajustado p-4 sm:p-6 e mb-4 sm:mb-6 */}
-      <h3 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4 border-b pb-2"> {/* Ajustado texto e mb */}
+    <div className="bg-gray-50 p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200 mb-4 sm:mb-6 relative">
+      <h3 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4 border-b pb-2">
         Circuito {index + 1}: {circuit.name || 'Novo Circuito'}
       </h3>
 
       <button
         onClick={() => onRemoveCircuit(circuit.id)}
-        className="absolute top-3 right-3 sm:top-4 sm:right-4 text-red-500 hover:text-red-700 transition duration-200" // Ajustado top/right
+        className="absolute top-3 right-3 sm:top-4 sm:right-4 text-red-500 hover:text-red-700 transition duration-200"
         title="Remover este circuito"
       >
-        <TrashIcon className="h-5 w-5 sm:h-6 sm:w-6" /> {/* Ajustado tamanho do ícone */}
+        <TrashIcon className="h-5 w-5 sm:h-6 sm:w-6" />
       </button>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4"> {/* Ajustado gaps para telas menores */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
         {/* Nome do Circuito */}
         <div className="flex flex-col">
           <label htmlFor={`name-${circuit.id}`} className="text-sm font-medium text-gray-700 mb-1">
@@ -52,7 +53,7 @@ const CircuitInputForm: React.FC<CircuitInputFormProps> = ({ circuit, index, onC
             value={circuit.name}
             onChange={handleChange}
             placeholder="Ex: Iluminação Sala"
-            className={`p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm ${circuit.errors.name ? 'border-red-500' : 'border-gray-300'}`} // Reduzido p para text-sm
+            className={`p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm ${circuit.errors.name ? 'border-red-500' : 'border-gray-300'}`}
           />
           {circuit.errors.name && <p className="text-red-500 text-xs mt-1">{circuit.errors.name}</p>}
         </div>
